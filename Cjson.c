@@ -49,6 +49,12 @@ CJSON_PUBLIC(void) json_scanner_skip_whitespace(JsonTokenScanner *json_scanner) 
     }
 }
 
+/**
+ * 创建token
+ * @param json_scanner
+ * @param token_type
+ * @return
+ */
 CJSON_PUBLIC(struct JsonToken) json_scanner_new_json_token(JsonTokenScanner *json_scanner, JsonTokenType token_type) {
     struct JsonToken token = {};
     token.token_type = token_type;
@@ -82,6 +88,11 @@ CJSON_PUBLIC(struct JsonToken) json_scanner_new_json_token(JsonTokenScanner *jso
     return token;
 }
 
+/**
+ *  尝试解析 number
+ * @param scanner
+ * @return
+ */
 CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_number(JsonTokenScanner *scanner) {
     const char *start = scanner->current;
     // optional minus
@@ -102,19 +113,19 @@ CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_number(JsonTokenScanner *s
                  "Invalid number at line %d, col %d\n", scanner->row, scanner->col);
 
         struct JsonToken token = json_scanner_new_json_token(scanner, JSON_TOKEN_ERROR);
-        token.error_msg = buf;
+        token.error_msg = strdup(buf);
         return token;
     }
 
     // fractional part
-    if (json_scanner_peek(scanner) == '.') {
+    if (json_scanner_peek(scanner) == '.') { dfasdfasdfasdfasdfa
         json_scanner_advance(scanner);
         if (!isdigit(json_scanner_peek(scanner))) {
             char buf[128];
             snprintf(buf, sizeof(buf), "Invalid number: expected digit after '.' at line %d, col %d\n", scanner->row,
                      scanner->col);
             struct JsonToken token = json_scanner_new_json_token(scanner, JSON_TOKEN_ERROR);
-            token.error_msg = buf;
+            token.error_msg = strdup(buf);
             return token;
         }
         while (isdigit(json_scanner_peek(scanner))) {
@@ -133,7 +144,7 @@ CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_number(JsonTokenScanner *s
             snprintf(buf, sizeof(buf), "Invalid number: expected digit in exponent at line %d, col %d\n", scanner->row,
                      scanner->col);
             struct JsonToken token = json_scanner_new_json_token(scanner, JSON_TOKEN_ERROR);
-            token.error_msg = buf;
+            token.error_msg = strdup(buf);
             return token;
         }
         while (isdigit(json_scanner_peek(scanner))) {
@@ -143,6 +154,11 @@ CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_number(JsonTokenScanner *s
     return json_scanner_new_json_token(scanner, JSON_TOKEN_NUMBER);
 }
 
+/**
+ * 尝试解析string
+ * @param scanner
+ * @return
+ */
 CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_string(JsonTokenScanner *scanner) {
     json_scanner_advance(scanner); // skip opening "
     scanner->start = scanner->current; // start 指向内容开始
@@ -170,10 +186,15 @@ CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_string(JsonTokenScanner *s
              "Invalid token: expected 'true' at line %d, col %d\n",
              scanner->row, scanner->col);
     struct JsonToken errorToken = json_scanner_new_json_token(scanner, JSON_TOKEN_ERROR);
-    errorToken.error_msg = buf;
+    errorToken.error_msg = strdup(buf);
     return errorToken;
 }
 
+/**
+ * 尝试解析true
+ * @param scanner
+ * @return
+ */
 CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_true(JsonTokenScanner *scanner) {
     // true
     char c1 = scanner->current[1];
@@ -194,10 +215,15 @@ CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_true(JsonTokenScanner *sca
              "Invalid token: expected 'true' at line %d, col %d\n",
              scanner->row, scanner->col);
     struct JsonToken errorToken = json_scanner_new_json_token(scanner, JSON_TOKEN_ERROR);
-    errorToken.error_msg = buf;
+    errorToken.error_msg = strdup(buf);
     return errorToken;
 }
 
+/**
+ *  尝试解析false
+ * @param scanner
+ * @return
+ */
 CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_false(JsonTokenScanner *scanner) {
     // false
     char c1 = scanner->current[1];
@@ -220,10 +246,15 @@ CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_false(JsonTokenScanner *sc
     snprintf(buf, sizeof(buf), "Invalid token: expected 'false' at line %d, col %d\n", scanner->row, scanner->col);
 
     struct JsonToken token = json_scanner_new_json_token(scanner, JSON_TOKEN_ERROR);
-    token.error_msg = buf;
+    token.error_msg = strdup(buf);
     return token;
 }
 
+/**
+ *  尝试解析null
+ * @param scanner
+ * @return
+ */
 CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_null(JsonTokenScanner *scanner) {
     // null
     char c1 = scanner->current[1];
@@ -243,10 +274,15 @@ CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_null(JsonTokenScanner *sca
     char buf[128];
     snprintf(buf, sizeof(buf), "Invalid token: expected 'null' at line %d, col %d\n", scanner->row, scanner->col);
     struct JsonToken token = json_scanner_new_json_token(scanner, JSON_TOKEN_ERROR);
-    token.error_msg = buf;
+    token.error_msg = strdup(buf);
     return token;
 }
 
+/**
+ *  获取下一个token
+ * @param scanner
+ * @return
+ */
 CJSON_PUBLIC(struct JsonToken) json_scanner_next_json_token(JsonTokenScanner *scanner) {
     json_scanner_skip_whitespace(scanner);
     scanner->start = scanner->current;
@@ -315,11 +351,16 @@ CJSON_PUBLIC(struct JsonToken) json_scanner_next_json_token(JsonTokenScanner *sc
             char buf[128];
             snprintf(buf, sizeof(buf), "unexpected Token: '%c' at line %d, col %d\n", c, scanner->row, scanner->col);
             token = json_scanner_new_json_token(scanner, JSON_TOKEN_ERROR);
-            token.error_msg = buf;
+            token.error_msg = strdup(buf);
     }
     return token;
 }
 
+/**
+ *  初始化
+ * @param scanner
+ * @param json
+ */
 CJSON_PUBLIC(void) json_scanner_init_scanner(JsonTokenScanner *scanner, const char *json) {
     scanner->row = 1;
     scanner->col = 1;
@@ -327,6 +368,10 @@ CJSON_PUBLIC(void) json_scanner_init_scanner(JsonTokenScanner *scanner, const ch
     scanner->current = json;
 }
 
+/**
+ * 打印函数
+ * @param token
+ */
 CJSON_PUBLIC(void) json_token_print(struct JsonToken *token) {
     const char *type_names[] = {
         "L_BRACE", // {
@@ -344,7 +389,7 @@ CJSON_PUBLIC(void) json_token_print(struct JsonToken *token) {
         "EOF" // 结束
     };
 
-    printf("[Line %-3d, Col %-3d] %-12s: ", token->row, token->col, type_names[token->token_type]);
+    printf("[Line %-3llu, Col %-3llu] %-12s: ", token->row, token->col, type_names[token->token_type]);
 
     if (token->token_type == JSON_TOKEN_NUMBER) {
         printf("[%g]\n", token->value_number);
@@ -357,6 +402,11 @@ CJSON_PUBLIC(void) json_token_print(struct JsonToken *token) {
     }
 }
 
+/**
+ * tostring方法
+ * @param token_type
+ * @return
+ */
 CJSON_PUBLIC(const char *)json_token_to_string(const JsonTokenType token_type) {
     switch (token_type) {
         case JSON_TOKEN_L_BRACE:
@@ -388,4 +438,322 @@ CJSON_PUBLIC(const char *)json_token_to_string(const JsonTokenType token_type) {
         default:
             return "unknown";
     }
+}
+
+
+/**
+ *    JSON    ::= Value
+ *    Value   ::= Object | Array | String | Number | true | false | null
+ *    Object  ::= '{' MemberList? '}'
+ *    MemberList ::= Member (',' Member)*
+ *    Member ::= String ':' Value
+ *    Array   ::= '[' ValueList? ']'
+ *    ValueList ::= Value (',' Value)*
+ */
+CJSON_PUBLIC(struct Json*) json_parser_parse(JsonParser *parser) {
+    return json_parser_parse_value(parser);
+}
+
+CJSON_PUBLIC(struct Json*) json_parser_parse_value(JsonParser *parser) {
+    struct Json *json = NULL;
+    switch (parser->currentToken.token_type) {
+        case (JSON_TOKEN_L_BRACE):
+            json = json_parser_parse_object(parser);
+            break;
+        case (JSON_TOKEN_L_BRACKET):
+            json = json_parser_parse_array(parser);
+            break;
+        case (JSON_TOKEN_STRING):
+            json = json_parser_parse_string(parser);
+            break;
+        case (JSON_TOKEN_NUMBER):
+            json = json_parser_parse_number(parser);
+            break;
+        case (JSON_TOKEN_TRUE):
+            json = json_parser_parse_true(parser);
+            break;
+        case (JSON_TOKEN_FALSE):
+            json = json_parser_parse_false(parser);
+            break;
+        case (JSON_TOKEN_NULL):
+            json = json_parser_parse_null(parser);
+            break;
+        default:
+            fprintf(stderr, "unexpected token\n");
+            break;
+    }
+    if (json == NULL && parser->has_error) {
+        fprintf(stderr, "%s\n", parser->error_msg);
+        return NULL;
+    }
+    return json;
+}
+
+CJSON_PUBLIC(struct Json*) json_parser_parse_object(JsonParser *parser) {
+    if (!json_parser_expect(parser, JSON_TOKEN_L_BRACE))
+        return NULL;
+    struct Json *object = (struct Json *) malloc(sizeof(struct Json));
+    object->Object.count = 0;
+    object->type = JSON_OBJECT;
+    object->Object.keys = NULL;
+    object->Object.values = NULL;
+
+    // 一直往后面走，直到 JSON_TOKEN_R_BRACE
+    //  {"  xxxx ":"",
+    while (parser->currentToken.token_type != JSON_TOKEN_R_BRACE) {
+        // json_parser_expect(parser, JSON_TOKEN_STRING);
+        char *key = strdup(parser->currentToken.value_string);
+        if (!json_parser_expect(parser, JSON_TOKEN_STRING))
+            return NULL;
+        if (!json_parser_expect(parser, JSON_TOKEN_COLON))
+            return NULL;
+        struct Json *value = json_parser_parse_value(parser);
+        object->Object.count++;
+        object->Object.keys = realloc(object->Object.keys, sizeof(char *) * object->Object.count);
+        object->Object.values = realloc(object->Object.values, sizeof(struct Json *) * object->Object.count);
+
+        object->Object.keys[object->Object.count - 1] = key;
+        object->Object.values[object->Object.count - 1] = value;
+        /**
+         * 如果后续还有节点，则继续往后面走
+         */
+        if (parser->currentToken.token_type == JSON_TOKEN_COMMA) {
+            json_parser_expect(parser, JSON_TOKEN_COMMA);
+        }
+    }
+    if (!json_parser_expect(parser, JSON_TOKEN_R_BRACE))
+        return NULL;
+    return object;
+}
+
+CJSON_PUBLIC(struct Json*) json_parser_parse_array(JsonParser *parser) {
+    if (!json_parser_expect(parser, JSON_TOKEN_L_BRACKET))
+        return NULL;
+    struct Json *json = (struct Json *) (malloc(sizeof(struct Json)));
+    json->Array.count = 0;
+    json->Array.elements = NULL;
+
+    while (parser->currentToken.token_type != JSON_TOKEN_R_BRACKET) {
+        struct Json *value = json_parser_parse_value(parser);
+        if (NULL == value)
+            return NULL;
+        json->Array.count++;
+        json->Array.elements = realloc(json->Array.elements, sizeof(struct Json *) * json->Array.count);
+        json->Array.elements[json->Array.count - 1] = value;
+
+        if (parser->currentToken.token_type == JSON_TOKEN_COMMA) {
+            json_parser_expect(parser, JSON_TOKEN_COMMA);
+        }
+    }
+    if (!json_parser_expect(parser, JSON_TOKEN_R_BRACKET))
+        return NULL;
+    return json;
+}
+
+CJSON_PUBLIC(struct Json*) json_parser_parse_string(JsonParser *parser) {
+    struct Json *json = (struct Json *) (malloc(sizeof(struct Json)));
+    json->type = JSON_STRING;
+    json->value_string = parser->currentToken.value_string;
+    if (!json_parser_expect(parser, JSON_TOKEN_STRING)) {
+        return NULL;
+    }
+    return json;
+}
+
+CJSON_PUBLIC(struct Json*) json_parser_parse_number(JsonParser *parser) {
+    struct Json *json = (struct Json *) (malloc(sizeof(struct Json)));
+    json->type = JSON_NUMBER;
+    json->value_number = parser->currentToken.value_number;
+    if (!json_parser_expect(parser, JSON_TOKEN_NUMBER)) {
+        return NULL;
+    }
+    return json;
+}
+
+CJSON_PUBLIC(struct Json*) json_parser_parse_true(JsonParser *parser) {
+    struct Json *json = (struct Json *) (malloc(sizeof(struct Json)));
+    json->type = JSON_TRUE;
+    if (!json_parser_expect(parser, JSON_TOKEN_TRUE)) {
+        return NULL;
+    }
+    return json;
+}
+
+CJSON_PUBLIC(struct Json*) json_parser_parse_false(JsonParser *parser) {
+    struct Json *json = (struct Json *) (malloc(sizeof(struct Json)));
+    json->type = JSON_FALSE;
+    if (!json_parser_expect(parser, JSON_TOKEN_FALSE)) {
+        return NULL;
+    }
+    return json;
+}
+
+CJSON_PUBLIC(struct Json*) json_parser_parse_null(JsonParser *parser) {
+    struct Json *json = (struct Json *) (malloc(sizeof(struct Json)));
+    json->type = JSON_NULL;
+    if (!json_parser_expect(parser, JSON_TOKEN_NULL)) {
+        return NULL;
+    }
+    return json;
+}
+
+CJSON_PUBLIC(int) json_parser_expect(JsonParser *parser, size_t type) {
+    if (parser->currentToken.token_type != type) {
+        char buf[128];
+        snprintf(buf, sizeof(buf), "expected token: %s but got %s\n at %llu,%llu",
+                 json_token_to_string(type),
+                 json_token_to_string(parser->currentToken.token_type),
+                 parser->currentToken.row,
+                 parser->currentToken.col
+        );
+        parser->has_error = 1;
+        parser->error_msg = strdup(buf);
+        return 0;
+    }
+    parser->currentToken = json_scanner_next_json_token(parser->scanner);
+    return 1;
+}
+
+CJSON_PUBLIC(void) json_parser_init(JsonParser *parser, JsonTokenScanner *scanner) {
+    parser->scanner = scanner;
+    parser->currentToken = json_scanner_next_json_token(scanner);
+}
+
+
+//====================== writer ======================//
+CJSON_PUBLIC(void) json_writer_init(JsonWriter *writer) {
+    writer->capacity = 128;
+    writer->length = 0;
+    writer->buffer = (char *) malloc(sizeof(char) * writer->capacity);
+    writer->buffer[0] = '\0';
+}
+
+
+CJSON_PUBLIC(void) json_writer_expand(JsonWriter *writer, size_t need_extra) {
+    while (writer->length + need_extra + 1 > writer->capacity) {
+        writer->capacity *= 2;
+    }
+    writer->buffer = (char *) realloc(writer->buffer, writer->capacity);
+}
+
+CJSON_PUBLIC(void) json_writer_append_string(JsonWriter *writer, const char *s) {
+    const size_t n = strlen(s);
+    json_writer_expand(writer, n);
+    memcpy(writer->buffer + writer->length, s, n);
+    writer->length += n;
+    writer->buffer[writer->length] = '\0';
+}
+
+CJSON_PUBLIC(void) json_writer_append_char(JsonWriter *writer, char c) {
+    json_writer_expand(writer, 1);
+    writer->length += 1;
+    writer->buffer[writer->length - 1] = c;
+    writer->buffer[writer->length] = '\0';
+}
+
+
+CJSON_PUBLIC(char*) json_writer_release(JsonWriter *writer) {
+    return writer->buffer;
+}
+
+
+CJSON_PUBLIC(char*) json_serialize(struct Json *node) {
+    JsonWriter writer;
+    json_writer_init(&writer);
+    json_serialize_value(node, &writer);
+    return json_writer_release(&writer);
+}
+
+CJSON_PUBLIC(void) json_serialize_value(struct Json *node, JsonWriter *buf) {
+    switch (node->type) {
+        case JSON_OBJECT:
+            json_serialize_object(node, buf);
+            break;
+        case JSON_ARRAY:
+            json_serialize_array(node, buf);
+            break;
+        case JSON_STRING:
+            json_serialize_string(buf, node->value_string);
+            break;
+        case JSON_NUMBER:
+            json_serialize_number(buf, node->value_number);
+            break;
+        case JSON_TRUE:
+            json_writer_append_string(buf, JSON_TRUE_STRING);
+            break;
+        case JSON_FALSE:
+            json_writer_append_string(buf, JSON_FALSE_STRING);
+            break;
+        case JSON_NULL:
+            json_writer_append_string(buf, JSON_NULL_STRING);
+            break;
+        default:
+            break;
+    }
+}
+
+CJSON_PUBLIC(void) json_serialize_object(struct Json *node, JsonWriter *buf) {
+    json_writer_append_char(buf, '{');
+    for (int i = 0; i < node->Object.count; i++) {
+        if (i > 0)
+            json_writer_append_char(buf, ',');
+        json_serialize_string(buf, node->Object.keys[i]);
+        json_writer_append_char(buf, ':');
+        json_serialize_value(node->Object.values[i], buf);
+    }
+    json_writer_append_char(buf, '}');
+}
+
+CJSON_PUBLIC(void) json_serialize_array(struct Json *node, JsonWriter *buf) {
+    json_writer_append_char(buf, '[');
+    for (int i = 0; i < node->Array.count; i++) {
+        if (i > 0)
+            json_writer_append_char(buf, ',');
+        json_serialize_value(node->Array.elements[i], buf);
+    }
+    json_writer_append_char(buf, ']');
+}
+
+CJSON_PUBLIC(void) json_serialize_string(JsonWriter *writer, const char *s) {
+    json_writer_append_char(writer, '"');
+    json_writer_append_char(writer, '"');
+
+    for (; *s; s++) {
+        switch (*s) {
+            case '"': json_writer_append_string(writer, "\\\"");
+                break;
+            case '\\': json_writer_append_string(writer, "\\\\");
+                break;
+            case '/': json_writer_append_string(writer, "\\/");
+                break;
+            case '\b': json_writer_append_string(writer, "\\b");
+                break;
+            case '\f': json_writer_append_string(writer, "\\f");
+                break;
+            case '\n': json_writer_append_string(writer, "\\n");
+                break;
+            case '\r': json_writer_append_string(writer, "\\r");
+                break;
+            case '\t': json_writer_append_string(writer, "\\t");
+                break;
+            default:
+                if ((unsigned char) *s < 0x20) {
+                    char esc[7];
+                    snprintf(esc, sizeof(esc), "\\u%04X", (unsigned char) *s);
+                    json_writer_append_string(writer, esc);
+                } else {
+                    json_writer_append_char(writer, *s);
+                }
+                break;
+        }
+    }
+
+    json_writer_append_char(writer, '"');
+}
+
+CJSON_PUBLIC(void) json_serialize_number(JsonWriter *writer, double value_double) {
+    char tmp[64];
+    int n = snprintf(tmp, sizeof(tmp), "%g", value_double);
+    json_writer_append_string(writer, tmp);
+    (void) n;
 }

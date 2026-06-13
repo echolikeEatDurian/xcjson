@@ -5,7 +5,7 @@
 #ifndef CJSON_FORK_CJSON_H
 #define CJSON_FORK_CJSON_H
 
-#include "list.h"
+#include <ctype.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,19 +61,23 @@ extern "C" {
    STR(CJSON_VERSION_MINOR) "." \
    STR(CJSON_VERSION_PATCH)
 
+#define  JSON_TRUE_STRING  "true"
+#define  JSON_FALSE_STRING "false"
+#define  JSON_NULL_STRING  "null"
+#define  JSON_BUFFER_EXPAND_FACTOR 2
 
 
 
 //====================== lexer ======================//
 typedef enum {
-    JSON_TOKEN_L_BRACE,
+    JSON_TOKEN_L_BRACE, //{
     JSON_TOKEN_R_BRACE,
 
-    JSON_TOKEN_L_BRACKET,
+    JSON_TOKEN_L_BRACKET, //[
     JSON_TOKEN_R_BRACKET,
 
-    JSON_TOKEN_COMMA,
-    JSON_TOKEN_COLON,
+    JSON_TOKEN_COMMA,  //,
+    JSON_TOKEN_COLON,  //:
 
     JSON_TOKEN_NUMBER,
     JSON_TOKEN_STRING,
@@ -124,11 +128,87 @@ CJSON_PUBLIC(void) json_scanner_init_scanner(JsonTokenScanner *scanner,const cha
 
 
 
+//====================== parser ======================//
+#define JSON_INVALID  (0)
+#define JSON_OBJECT   (1 << 0)
+#define JSON_ARRAY    (1 << 1)
+#define JSON_STRING   (1 << 2)
+#define JSON_NUMBER   (1 << 3)
+#define JSON_TRUE     (1 << 4)
+#define JSON_FALSE    (1 << 5)
+#define JSON_NULL     (1 << 6)
+#define JSON_RAW      (1 << 7)
+
+struct Json {
+    size_t type;
+
+    union {
+        double value_number;
+        const char *value_string;
+
+        struct Object {
+            char **keys;
+            struct Json **values;
+            int count;
+        } Object;
+
+        struct Array {
+            struct Json **elements;
+            int count;
+        } Array;
+    };
+};
+
+typedef struct JsonParser {
+    JsonTokenScanner *scanner;
+    struct JsonToken currentToken;
+    int    has_error;
+    const char* error_msg;
+}JsonParser;
+
+/**
+ *    JSON    ::= Value
+ *    Value   ::= Object | Array | String | Number | true | false | null
+ *    Object  ::= '{' MemberList? '}'
+ *    MemberList ::= Member (',' Member)*
+ *    Member ::= String ':' Value
+ *    Array   ::= '[' ValueList? ']'
+ *    ValueList ::= Value (',' Value)*
+ */
+CJSON_PUBLIC(struct Json*) json_parser_parse(JsonParser* parser);
+CJSON_PUBLIC(struct Json*) json_parser_parse_value(JsonParser* parser);
+CJSON_PUBLIC(struct Json*) json_parser_parse_object(JsonParser* parser);
+CJSON_PUBLIC(struct Json*) json_parser_parse_array(JsonParser* parser);
+CJSON_PUBLIC(struct Json*) json_parser_parse_string(JsonParser* parser);
+CJSON_PUBLIC(struct Json*) json_parser_parse_number(JsonParser* parser);
+CJSON_PUBLIC(struct Json*) json_parser_parse_true(JsonParser* parser);
+CJSON_PUBLIC(struct Json*) json_parser_parse_false(JsonParser* parser);
+CJSON_PUBLIC(struct Json*) json_parser_parse_null(JsonParser* parser);
+
+CJSON_PUBLIC(int)  json_parser_expect(JsonParser* parser,size_t type);
+CJSON_PUBLIC(void) json_parser_init(JsonParser* parser,JsonTokenScanner* scanner);
 
 
 
+//====================== writer ======================//
+typedef struct JsonWriter {
+    char*    buffer;
+    size_t   length;
+    size_t   capacity;
+}JsonWriter;
 
+CJSON_PUBLIC(void) json_writer_init(JsonWriter *writer);
+CJSON_PUBLIC(void) json_writer_expand(JsonWriter *writer, size_t need_extra);
+CJSON_PUBLIC(void) json_writer_append_string(JsonWriter *writer, const char *s);
+CJSON_PUBLIC(void) json_writer_append_char(JsonWriter *writer, char c);
+CJSON_PUBLIC(char) *json_writer_release(JsonWriter *writer);
+CJSON_PUBLIC(void) json_serialize_value(struct Json *node, JsonWriter *buf);
+CJSON_PUBLIC(void) json_serialize_object(struct Json *node, JsonWriter *buf);
+CJSON_PUBLIC(void) json_serialize_array(struct Json *node, JsonWriter *buf);
+CJSON_PUBLIC(void) json_serialize_string(JsonWriter *buf, const char *string);
+CJSON_PUBLIC(void) json_serialize_number(JsonWriter *buf, double value_double);
 
+CJSON_PUBLIC(char) *json_serialize(struct Json *node);
 #ifdef __cplusplus
 }
 #endif

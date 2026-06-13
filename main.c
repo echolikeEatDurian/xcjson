@@ -5,14 +5,14 @@ int main(void) {
     printf("%s\n",CJSON_VERSION);
 
     const char *json = "{\"name\":\"JSON Parser\","
-                    "\"version\":1.120,\"active\":true,"
-                    "\"tags\":[\"json\",\"parser\",123],\n\t\f\v\n\n\n \"config\":"
-                    "{\"debug\":false,\"max\":null,\"ratio"
-                    "\":-3.14e-2}}";
-    printf("%s\n",json);
+            "\"version\":1.120,\"active\":true,"
+            "\"tags\":[\"json\",\"parser\",123],\n\t\f\v\n\n\n \"config\":"
+            "{\"debug\":false,\"max\":null,\"ratio"
+            "\":-3.14e-2}}";
+    printf("%s\n", json);
 
     JsonTokenScanner scanner;
-    json_scanner_init_scanner(&scanner,json);
+    json_scanner_init_scanner(&scanner, json);
 
     int token_count = 0;
     while (1) {
@@ -20,11 +20,20 @@ int main(void) {
         json_token_print(&token);
         token_count++;
 
-        if (token.token_type == JSON_TOKEN_EOF || token.token_type == JSON_TOKEN_ERROR) {
+        if (token.token_type == JSON_TOKEN_EOF ) {
             break;
+        }
+        if (token.token_type == JSON_TOKEN_ERROR) {
+            fprintf(stderr,"\n%s\n",token.error_msg);
+            return -1;
         }
     }
     printf("\n=== Total tokens: %d ===\n", token_count);
+    json_scanner_init_scanner(&scanner, json);
+    printf("=== JSON Parser Test ===\n\n");
+    JsonParser parser = {};
+    json_parser_init(&parser, &scanner);
+    struct Json *root = json_parser_parse(&parser);
 
 
     return 0;

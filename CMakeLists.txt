@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 11)
 add_executable(CJSON_Fork main.c
         Cjson.h
         Cjson.c
-        list.h)
+)
 
 add_executable(UnitTest Tests/main.c
         Tests/unity/unity.c

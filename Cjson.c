@@ -531,6 +531,7 @@ CJSON_PUBLIC(struct Json*) json_parser_parse_array(JsonParser *parser) {
         return NULL;
     struct Json *json = (struct Json *) (malloc(sizeof(struct Json)));
     json->Array.count = 0;
+    json->type = JSON_ARRAY;
     json->Array.elements = NULL;
 
     while (parser->currentToken.token_type != JSON_TOKEN_R_BRACKET) {
@@ -617,6 +618,8 @@ CJSON_PUBLIC(int) json_parser_expect(JsonParser *parser, size_t type) {
 CJSON_PUBLIC(void) json_parser_init(JsonParser *parser, JsonTokenScanner *scanner) {
     parser->scanner = scanner;
     parser->currentToken = json_scanner_next_json_token(scanner);
+    parser->has_error = 0;
+    parser->error_msg = NULL;
 }
 
 
@@ -715,7 +718,6 @@ CJSON_PUBLIC(void) json_serialize_array(struct Json *node, JsonWriter *buf) {
 }
 
 CJSON_PUBLIC(void) json_serialize_string(JsonWriter *writer, const char *s) {
-    json_writer_append_char(writer, '"');
     json_writer_append_char(writer, '"');
 
     for (; *s; s++) {

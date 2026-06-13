@@ -17,5 +17,7 @@ add_executable(UnitTest Tests/main.c
         Cjson.h
         Tests/test_cjson_scanner.c
         Tests/test_cjson_scanner.h
+        Tests/test_cjson_parser.c
+        Tests/test_cjson_parser.h
 
 )

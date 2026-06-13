@@ -118,7 +118,7 @@ CJSON_PUBLIC(struct JsonToken) json_scanner_try_parse_number(JsonTokenScanner *s
     }
 
     // fractional part
-    if (json_scanner_peek(scanner) == '.') { dfasdfasdfasdfasdfa
+    if (json_scanner_peek(scanner) == '.') {
         json_scanner_advance(scanner);
         if (!isdigit(json_scanner_peek(scanner))) {
             char buf[128];
